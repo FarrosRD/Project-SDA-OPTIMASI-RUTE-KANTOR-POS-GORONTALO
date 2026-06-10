@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>RouteOptima - Dataset Info</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#0D47A1', textMain: '#1A237E', background: '#F8F9FA', surface: '#FFFFFF', graphDark: '#1A1C23' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-textMain font-sans bg-gray-50 flex min-h-screen">
+    
+    <aside class="w-64 bg-surface border-r border-gray-200 flex flex-col pt-6 pb-4 shrink-0 sticky top-0 h-screen overflow-y-auto z-20">
+        <div class="px-6 flex items-center mb-10">
+            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3 shrink-0">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl text-primary tracking-tight">Route Post Gorontalo</h1>
+                <p class="text-xs text-gray-500">SDA KELOMPOK 12</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                Algorithm Comparison
+            </a>
+            <a href="/dataset" class="flex items-center px-4 py-3 bg-blue-100/50 text-primary rounded-lg font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                Dataset (Nodes & Graph)
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col p-8 space-y-6">
+        
+        <div class="mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Dataset Connectivity Map</h2>
+            <p class="text-sm text-gray-500 mt-1">Visualisasi graf jaringan penuh untuk 50+ lokasi kelurahan di Gorontalo.</p>
+        </div>
+
+        <section class="bg-surface rounded-xl border border-gray-200 overflow-hidden shadow-sm h-[500px] shrink-0 relative">
+            <div id="full-network" class="w-full h-full outline-none bg-graphDark"></div>
+            
+            <div class="absolute bottom-4 left-4 bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-gray-700 shadow-lg flex flex-col gap-2 text-xs font-medium z-10 text-gray-200">
+                <div class="flex items-center"><div class="w-3 h-3 bg-[#475569] border border-[#94A3B8] rounded-full mr-2"></div> Node Lokasi (Kelurahan)</div>
+                <div class="flex items-center"><div class="w-4 h-1 bg-[#64748B] mr-2 rounded"></div> Jalur Interkoneksi Tersedia</div>
+            </div>
+        </section>
+
+        <section class="bg-surface rounded-xl border border-gray-200 shadow-sm overflow-hidden flex-1 mb-10">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-700 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Daftar Lokasi & Ketetanggaan
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left relative">
+                    <thead class="text-xs uppercase text-gray-500 bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold w-24">ID Node</th>
+                            <th class="px-6 py-4 font-semibold w-1/3">Nama Kelurahan</th>
+                            <th class="px-6 py-4 font-semibold">Terkoneksi Dengan (Jarak)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for id, nama in lokasi.items() %}
+                        <tr class="hover:bg-blue-50/30 transition-colors">
+                            <td class="px-6 py-3 font-bold text-primary">{{ id }}</td>
+                            <td class="px-6 py-3 font-medium text-gray-700">{{ nama }}</td>
+                            <td class="px-6 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    {% if id in graf_gorontalo %}
+                                        {% for t_id, jarak in graf_gorontalo[id].items() %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 border border-gray-200 text-xs text-gray-600">
+                                                <span class="font-bold mr-1">{{ t_id }}</span> ({{ jarak }} km)
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-gray-400 italic">Tidak ada koneksi awal</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const data = {
+            nodes: new vis.DataSet({{ graf_json | safe }}.nodes),
+            edges: new vis.DataSet({{ graf_json | safe }}.edges)
+        };
+        
+
+        const options = {
+            layout: { randomSeed: 42 }, 
+            physics: { 
+                enabled: true, 
+                solver: 'forceAtlas2Based', 
+                stabilization: { iterations: 150 } 
+            },
+            edges: { smooth: { type: 'continuous', roundness: 0.5 } },
+            interaction: { hover: true, zoomView: true, dragView: true }
+        };
+        new vis.Network(document.getElementById('full-network'), data, options);
+    </script>
+</body>
+</html>

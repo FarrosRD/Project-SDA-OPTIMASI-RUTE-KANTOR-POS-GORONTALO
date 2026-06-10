@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>RouteOptima - Algorithm Comparison</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#0D47A1', secondary: '#1565C0',
+                        background: '#F8F9FA', surface: '#FFFFFF',
+                        textMain: '#1A237E', textLight: '#5C6BC0',
+                        border: '#E0E0E0', graphDark: '#1A1C23',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .vis-network:focus { outline: none; }
+    </style>
+</head>
+<body class="text-textMain font-sans bg-gray-50 flex min-h-screen">
+    <aside class="w-64 bg-surface border-r border-border flex flex-col pt-6 pb-4 shrink-0 sticky top-0 h-screen overflow-y-auto z-20">
+        <div class="px-6 flex items-center mb-10">
+            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3 shrink-0">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl text-primary tracking-tight">Route Post Gorrontolo</h1>
+                <p class="text-xs text-textLight">SDA KELOMPOK 12</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 bg-blue-100/50 text-primary rounded-lg font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Algorithm Comparison
+            </a>
+            <a href="/dataset" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Dataset (Nodes & Graph)
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col">
+        <header class="bg-surface border-b border-border pt-4 px-8 sticky top-0 z-10 flex">
+            <button id="tab-single" onclick="switchTab('tunggal')" class="pb-4 border-b-2 border-primary text-primary font-medium px-4">Point-to-Point</button>
+            <button id="tab-batch" onclick="switchTab('akumulasi')" class="pb-4 border-b-2 border-transparent text-gray-500 hover:text-textMain font-medium px-4 transition-colors">Batch Analysis</button>
+        </header>
+
+        <div class="p-8 space-y-6 max-w-6xl mx-auto w-full pb-16">
+            {% if hasil and hasil.error %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+                <div class="flex"><div class="flex-shrink-0"><svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></div>
+                <div class="ml-3"><p class="text-sm text-red-700 font-medium">{{ hasil.error }}</p></div></div>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/" class="bg-surface rounded-xl border border-border p-6 flex flex-wrap gap-6 items-end custom-shadow">
+                <input type="hidden" name="jenis_perbandingan" id="input_jenis_perbandingan" value="{% if hasil %}{{ hasil.jenis }}{% else %}tunggal{% endif %}">
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Node</label>
+                    <select name="start_node" class="block w-full py-2.5 px-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-sm">
+                        {% for id, nama in lokasi.items() %}
+                        <option value="{{ id }}" {% if request.form.get('start_node') == id %}selected{% endif %}>{{ id }} - {{ nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="target_container" class="flex-1 min-w-[200px]">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Node</label>
+                    <select name="target_node" class="block w-full py-2.5 px-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-sm">
+                        {% for id, nama in lokasi.items() %}
+                        <option value="{{ id }}" {% if request.form.get('target_node') == id %}selected{% endif %}>{{ id }} - {{ nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="shrink-0">
+                    <button type="submit" class="bg-primary hover:bg-secondary text-white font-medium py-2.5 px-6 rounded-md flex items-center transition-colors shadow-sm">
+                        Compare Routes
+                    </button>
+                </div>
+            </form>
+
+            {% if hasil and not hasil.error %}
+            <section class="bg-surface rounded-xl border border-border overflow-hidden custom-shadow flex flex-col">
+                <div class="p-4 border-b border-border bg-gray-50"><span class="font-semibold text-gray-700">Visualisasi Rute</span></div>
+                
+                <div class="relative w-full h-[450px] bg-graphDark">
+                    <div id="mynetwork" class="w-full h-full absolute inset-0 outline-none"></div>
+                    
+                    <div class="absolute bottom-4 left-4 bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-gray-700 shadow-lg flex flex-col gap-2 text-xs font-medium z-10 text-gray-200">
+                        <div class="flex items-center"><div class="w-4 h-1 bg-[#3B82F6] mr-2 rounded"></div> Dijkstra (Optimal)</div>
+                        <div class="flex items-center"><div class="w-4 h-1 border-b-2 border-dashed border-[#10B981] mr-2"></div> Greedy Path</div>
+                        <div class="flex items-center"><div class="w-4 h-1 bg-[#F59E0B] mr-2 rounded"></div> Rute Sama / Bertumpuk</div>
+                        {% if hasil.jenis == 'tunggal' %}
+                        <div class="flex items-center mt-1"><div class="w-3 h-3 bg-[#EF4444] rounded-full mr-2"></div> Trapped Node (Greedy)</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-surface rounded-xl border border-border p-6 custom-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-semibold text-gray-800">Dijkstra's Algorithm</h3>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">Optimal</span>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex items-baseline"><span class="text-4xl font-bold text-primary mr-2">{{ hasil.dj_jarak }}</span><span class="text-gray-500 font-medium">km</span></div>
+                            <div class="mt-1 text-sm text-gray-500 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Waktu Komputasi: <span class="font-mono text-gray-700 ml-1 bg-gray-100 px-1.5 rounded">{{ hasil.dj_waktu }} ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 border border-gray-100 leading-relaxed">
+                            {% if hasil.jenis == 'tunggal' %}{{ hasil.dj_rute | safe }}{% else %}Menjangkau 100% Node (Total Rute: 49){% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-surface rounded-xl border border-border p-6 custom-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-semibold text-gray-800">Greedy Algorithm</h3>
+                            {% if hasil.jenis == 'tunggal' %}
+                                {% if hasil.status_gr == 'Sama' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">Sama</span>
+                                {% elif hasil.status_gr == 'Sub-Optimal' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">Sub-Optimal</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">Gagal / Trapped</span>
+                                {% endif %}
+                            {% else %}
+                                {% if hasil.rute_gagal_gr == 0 %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">Selesai (Sub-Optimal)</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">Gagal pada {{ hasil.rute_gagal_gr }} Node</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex items-baseline"><span class="text-4xl font-bold text-gray-900 mr-2">{{ hasil.gr_jarak }}</span><span class="text-gray-500 font-medium">km</span></div>
+                            <div class="mt-1 text-sm text-gray-500 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Waktu Komputasi: <span class="font-mono text-gray-700 ml-1 bg-gray-100 px-1.5 rounded">{{ hasil.gr_waktu }} ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 border border-gray-100 leading-relaxed">
+                            {% if hasil.jenis == 'tunggal' %}
+                                {{ hasil.gr_rute | safe }}
+                                {% if hasil.status_gr == 'Gagal' %} <span class="text-red-600 font-bold ml-1 text-xs">(Trapped di N{{ hasil.terjebak_node | replace('V', '') }})</span>{% endif %}
+                            {% else %}
+                                Cakupan Berhasil: {{ hasil.cakupan_gr }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-surface rounded-xl border border-border p-6 custom-shadow mt-6">
+                <h3 class="font-semibold text-gray-800 mb-4 text-lg">Kesimpulan Performa</h3>
+                
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4 text-sm text-gray-800 leading-relaxed">
+                    <span class="font-bold text-primary">Verdict Eksekusi:</span><br>
+                    {% if hasil.jenis == 'tunggal' %}
+                        {% if hasil.status_gr == 'Sama' %}
+                            Kedua algoritma menghasilkan performa rute yang <b>sama</b> dengan total jarak tempuh <b>{{ hasil.dj_jarak }} km</b>. 
+                            Meskipun secara jarak rute sama persis, terdapat perbedaan waktu komputasi; di mana algoritma Greedy menyelesaikannya dalam waktu <b>{{ hasil.gr_waktu }} ms</b>, sedangkan algoritma Dijkstra membutuhkan waktu <b>{{ hasil.dj_waktu }} ms</b>. Hal ini menunjukkan untuk rute ini, metode heuristik Greedy cukup andal.
+                        {% elif hasil.status_gr == 'Sub-Optimal' %}
+                            Algoritma Dijkstra menjamin hasil optimal dengan jarak terpendek <b>{{ hasil.dj_jarak }} km</b> dalam waktu komputasi <b>{{ hasil.dj_waktu }} ms</b>. 
+                            Di sisi lain, algoritma Greedy berhasil mencapai tujuan namun dengan rute yang lebih panjang (Sub-Optimal, <b>{{ hasil.gr_jarak }} km</b>). Walaupun hasilnya kurang optimal, komputasi Greedy berjalan dalam waktu <b>{{ hasil.gr_waktu }} ms</b>.
+                        {% else %}
+                            Algoritma Dijkstra berhasil menemukan rute optimal sebesar <b>{{ hasil.dj_jarak }} km</b> dalam waktu <b>{{ hasil.dj_waktu }} ms</b>. 
+                            Namun, algoritma Greedy <b>Gagal / Terjebak di Node {{ hasil.terjebak_node }}</b> karena memilih lintasan minimum lokal yang buntu. Proses heuristik Greedy berhenti dan tidak dapat mencapai target pada waktu komputasi <b>{{ hasil.gr_waktu }} ms</b>.
+                        {% endif %}
+                    {% else %}
+                        Pada simulasi Batch (menguji ke 49 rute node), Dijkstra sukses memetakan <b>100%</b> jalur optimal secara akurat dengan akumulasi waktu komputasi sebesar <b>{{ hasil.dj_waktu }} ms</b>. Sebaliknya, Greedy mengeksekusi (<b>{{ hasil.gr_waktu }} ms</b>) namun <b>Gagal pada {{ hasil.rute_gagal_gr }} rute pencarian</b> (Cakupan sukses hanya {{ hasil.cakupan_gr }}). Hal ini membuktikan kerentanan Greedy terhadap *Local Minima* dalam graf kompleks.
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tab) {
+            document.getElementById('input_jenis_perbandingan').value = tab;
+            const tabSingle = document.getElementById('tab-single');
+            const tabBatch = document.getElementById('tab-batch');
+            const targetContainer = document.getElementById('target_container');
+
+            if (tab === 'tunggal') {
+                tabSingle.className = "pb-4 border-b-2 border-primary text-primary font-medium px-4";
+                tabBatch.className = "pb-4 border-b-2 border-transparent text-gray-500 hover:text-textMain font-medium px-4 transition-colors";
+                targetContainer.style.display = 'block';
+            } else {
+                tabBatch.className = "pb-4 border-b-2 border-primary text-primary font-medium px-4";
+                tabSingle.className = "pb-4 border-b-2 border-transparent text-gray-500 hover:text-textMain font-medium px-4 transition-colors";
+                targetContainer.style.display = 'none';
+            }
+        }
+        window.onload = function() { switchTab(document.getElementById('input_jenis_perbandingan').value); };
+
+        {% if hasil and not hasil.error %}
+            const data = {
+                nodes: new vis.DataSet({{ hasil.graf_json | safe }}.nodes),
+                edges: new vis.DataSet({{ hasil.graf_json | safe }}.edges)
+            };
+            
+            // RANDOM SEED AGAR POSISI GRAF FIXED
+            const options = {
+                layout: { randomSeed: 42 }, 
+                physics: { 
+                    enabled: true, 
+                    solver: 'forceAtlas2Based', 
+                    stabilization: { iterations: 150 } 
+                },
+                edges: { smooth: { type: 'continuous', roundness: 0.5 } },
+                interaction: { hover: true, zoomView: true, dragView: true }
+            };
+            new vis.Network(document.getElementById('mynetwork'), data, options);
+        {% endif %}
+    </script>
+</body>
+</html>
